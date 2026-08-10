@@ -7,9 +7,20 @@
 #include <functional>
 #include <any>
 
-using event_type_General = std::function<void(int)>;
+using event_type_General = std::function<void()>;
 
 namespace Aegis_stateMachine{
+
+    // here is the error code that help define the error
+    enum Error_Code: uint{
+        Requested_State_Event_Not_Found = 0,
+        Boundary = 1024
+    };
+
+    enum Switching_Status: uint{
+        Success = 0,
+        Against_Boundary = 1
+    };
 
     std::any stored_State{};
 
@@ -53,6 +64,28 @@ namespace Aegis_stateMachine{
             // reversal registration of the event and the state
             // used for the later retrieve
             reverse_event_Registration.insert(reverse_event_Registration.end(), {event, state});
+        }
+
+        std::expected<Switching_Status, Error_Code> Transition(type& state) {
+            std::unordered_map<std::any, event_type_General>::iterator find_result =
+                event_Registration.find(state);
+
+            // if there is no error, then fireup the event
+            if (find_result == event_Registration.end()) {
+                return std::unexpected<Error_Code>(Error_Code::Requested_State_Event_Not_Found);
+            }
+
+            // remove the redundant else keyword
+            find_result->second();
+
+            // move the state to the next state and terminate the function execuion
+            if (state != Boundary) {
+                state++;
+                return Switching_Status::Success;
+            }
+
+            // make sure the return value exists in every circumstance
+            return Switching_Status::Success;
         }
     };
 }
