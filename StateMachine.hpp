@@ -55,7 +55,9 @@ namespace Aegis_stateMachine{
         StateMachine<type>(const StateMachine<type>&) = delete;
         ~StateMachine<type>(){};
 
-        void switch_State(type& state){}
+        void switch_State(type& state) {
+            current_state = state;
+        }
 
         void Register_Event(type& state, event_type_General event) {
             // register the specific event to the state
