@@ -19,6 +19,7 @@ namespace Aegis_ThreadPool {
     class thread_pool {
     private:
         std::queue<std::jthread> threadPool;
+        bool status_isShutDown;
 
     public:
         thread_pool(){}
@@ -34,6 +35,11 @@ namespace Aegis_ThreadPool {
             }
         }
 
+        bool isShutDown(){ return status_isShutDown; }
+
+        std::size_t getQueueSize(){ return threadPool.size(); }
+
+        
 
     };
 }
