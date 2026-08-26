@@ -13,7 +13,7 @@ include(GoogleTest)
 # Add your executable
 add_executable(tests
     tests/test_memoryManager.cpp
-    # Add other test source files here
+        # Add other test source files here
 )
 
 # Link GTest to your executable

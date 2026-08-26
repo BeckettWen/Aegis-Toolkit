@@ -187,7 +187,5 @@ namespace Aegis_MemoryManager{
 
     //the end bracket of the class Aegis_allocator
     };
-
-    class Aegis_Multithreading{};
 //the end bracket of the namespace
 }
