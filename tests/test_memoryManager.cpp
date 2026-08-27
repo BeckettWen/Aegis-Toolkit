@@ -5,9 +5,31 @@
 
 
 TEST(memory_manager_test, final_test) {
+
+    Aegis_MemoryManager::Aegis_allocator test_memory_manager;
+
+
+    // the custom aegis allocator
     std::chrono::time_point<std::chrono::high_resolution_clock> start_timer
         = std::chrono::high_resolution_clock::now();
 
+    test_memory_manager.allocateMemory(1024);
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> stop_timer
+        = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<float> duration_aegis = start_timer - stop_timer;
+    std::cout<<"custom:"<<duration_aegis*1000<<"ms\n";
+
+    // the regular malloc
+    start_timer = std::chrono::high_resolution_clock::now();
+
+    for (int loop = 0; loop < 1024; loop++){ auto pointer = malloc(1);}
+
+    stop_timer = std::chrono::high_resolution_clock::now();
+    duration_aegis = start_timer - stop_timer;
+
+    std::cout<<"regular:"<<duration_aegis*1000<<"ms\n";
     
 }
 

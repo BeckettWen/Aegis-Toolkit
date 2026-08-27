@@ -56,7 +56,7 @@ namespace Aegis_MemoryManager{
                 memoryPool.clear();
             }
 
-        protected:
+        public:
             //memory allocation, return the index to achieve maximize simplicity
             std::size_t allocateMemory(std::size_t requestedSize){
                 previousChunkNumber = currentAvaliableChunkNumber;
