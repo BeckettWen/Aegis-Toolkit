@@ -30,20 +30,23 @@ namespace Aegis_MemoryManager{
             std::string version = "Version 1 Update 1";
 
         private:
-            // using the 1 megabytes memory as the allocator's step inside the header file
-            // these are the core part of the memory allocator
-            std::vector<std::unique_ptr<DefaultChunkOfMemory>> memoryPool;
-            std::vector<std::tuple<MemoryAddress, std::size_t>> memoryAddresses;
+        // using the 1 megabytes memory as the allocator's step inside the header file
+        // these are the core part of the memory allocator
+        std::vector<std::unique_ptr<DefaultChunkOfMemory>> memoryPool;
+        std::vector<std::tuple<MemoryAddress, std::size_t>> memoryAddresses;
 
-            // use the allocation recorder to find the record that holds the chunk number
-            // use the allocated chunk size to find the record that holds the chunks allocated
-            // then get to the memory address to get the detailed memory address and the indicator
-            std::unordered_map<std::size_t, std::size_t> allocatedChunkSize, allocationRecorder;
+        // use the allocation recorder to find the record that holds the chunk number
+        // use the allocated chunk size to find the record that holds the chunks allocated
+        // then get to the memory address to get the detailed memory address and the indicator
+        std::unordered_map<std::size_t, std::size_t> allocatedChunkSize, allocationRecorder;
 
-            std::size_t memoryBlockNumber_InsideChunk, idleMemorySize, currentAvaliableChunkNumber, previousChunkNumber;
-            MemoryAddress temporaryAddress;
+        std::size_t memoryBlockNumber_InsideChunk, idleMemorySize, currentAvaliableChunkNumber, previousChunkNumber;
+        MemoryAddress temporaryAddress;
 
-            std::size_t AllocationIndex = 0;
+        std::size_t AllocationIndex = 0;
+
+        // code upon is the original code
+        // code below is the code used to optimize this
 
 
         public:
