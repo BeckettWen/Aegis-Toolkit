@@ -32,7 +32,10 @@ namespace Aegis_MemoryManager{
         private:
         // using the 1 megabytes memory as the allocator's step inside the header file
         // these are the core part of the memory allocator
+        // which is generic for both before-optimized and after-optimized
         std::vector<std::unique_ptr<DefaultChunkOfMemory>> memoryPool;
+
+        // this is the memory address before the optimization, not generic
         std::vector<std::tuple<MemoryAddress, std::size_t>> memoryAddresses;
 
         // use the allocation recorder to find the record that holds the chunk number
@@ -47,7 +50,11 @@ namespace Aegis_MemoryManager{
 
         // code upon is the original code
         // code below is the code used to optimize this
-
+        struct Memory_Representation_Unified {
+            std::size_t block_number;
+            std::size_t withinBlock_number;
+            std::size_t allocation_index;
+        };
 
         public:
             Aegis_allocator(): currentAvaliableChunkNumber(0), previousChunkNumber(0){
