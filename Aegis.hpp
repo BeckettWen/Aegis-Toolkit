@@ -43,21 +43,25 @@ namespace Aegis_MemoryManager{
         // then get to the memory address to get the detailed memory address and the indicator
         std::unordered_map<std::size_t, std::size_t> allocatedChunkSize, allocationRecorder;
 
-        std::size_t memoryBlockNumber_InsideChunk, idleMemorySize, currentAvaliableChunkNumber, previousChunkNumber;
+        std::size_t memoryBlockNumber_InsideChunk, idleMemorySize, currentAvailableChunkNumber, previousChunkNumber;
         MemoryAddress temporaryAddress;
 
         std::size_t AllocationIndex = 0;
 
         // code upon is the original code
-        // code below is the code used to optimize this
+        // code below is the optimized code
         struct Memory_Representation_Unified {
             std::size_t block_number;
             std::size_t withinBlock_number;
             std::size_t allocation_index;
         };
 
+        // this holds all of the unified memory address
+        std::vector<std::unique_ptr<Memory_Representation_Unified>> memoryAddresses_Optimized;
+        std::unordered_map<std::size_t, std::size_t> allocationRecorder_Optimized;
+
         public:
-            Aegis_allocator(): currentAvaliableChunkNumber(0), previousChunkNumber(0){
+            Aegis_allocator(): currentAvailableChunkNumber(0), previousChunkNumber(0){
                 memoryPool.clear();
                 memoryAddresses.clear();
                 allocatedChunkSize.clear();
@@ -67,27 +71,38 @@ namespace Aegis_MemoryManager{
             }
 
         public:
-            //memory allocation, return the index to achieve maximize simplicity
-            std::size_t allocateMemory(std::size_t requestedSize){
-                previousChunkNumber = currentAvaliableChunkNumber;
-                currentAvaliableChunkNumber += requestedSize / (1024*1024) + 1;
-                memoryPool.reserve(memoryPool.size() + currentAvaliableChunkNumber - previousChunkNumber);
-                std::generate_n(std::back_inserter(memoryPool), currentAvaliableChunkNumber - previousChunkNumber, []() {
+        //memory allocation, return the index to achieve maximize simplicity
+        std::size_t allocateMemory(std::size_t requestedSize){
+                previousChunkNumber = currentAvailableChunkNumber;
+                currentAvailableChunkNumber += requestedSize / (1024*1024) + 1;
+                memoryPool.reserve(memoryPool.size() + currentAvailableChunkNumber - previousChunkNumber);
+                std::generate_n(std::back_inserter(memoryPool), currentAvailableChunkNumber - previousChunkNumber, []() {
                     return std::make_unique<DefaultChunkOfMemory>();
                 });
 
                 // get the memory address, aka the special index
                 AllocationIndex ++;
-                temporaryAddress = std::make_tuple(currentAvaliableChunkNumber, 0);
+                temporaryAddress = std::make_tuple(currentAvailableChunkNumber, 0);
                 memoryAddresses.insert(memoryAddresses.end(), std::make_tuple(temporaryAddress, AllocationIndex));
 
-                allocationRecorder.insert(allocationRecorder.end(), {AllocationIndex, currentAvaliableChunkNumber});
+                allocationRecorder.insert(allocationRecorder.end(), {AllocationIndex, currentAvailableChunkNumber});
 
                 allocatedChunkSize.insert(allocatedChunkSize.end(), {AllocationIndex, requestedSize / (1024*1024) + 1});
                 return memoryAddresses.size();
             }
 
-            std::expected<void, std::string> DeleteMemory(std::size_t requestedDeletion){
+        // optimized memory allocation function
+        std::size_t allocateMemory_Optimized(std::size_t requestedSize_memory) {
+            // the original process of the allocation to record the memory address and give a unique index
+            std::size_t requestedBlockNumber = requestedSize_memory / (1024*1024);
+            previousChunkNumber = currentAvailableChunkNumber;
+            currentAvailableChunkNumber += requestedSize_memory / (1024*1024) + 1;
+
+            // now request the acquired memory blocks
+
+        }
+
+        std::expected<void, std::string> DeleteMemory(std::size_t requestedDeletion){
                 //use the passed in request index to find the address and the step
                 std::unordered_map<std::size_t, std::size_t>::iterator findResult = allocationRecorder.find(requestedDeletion);
                 if(findResult != allocationRecorder.end()){

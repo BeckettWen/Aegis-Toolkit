@@ -21,7 +21,7 @@ TEST(memory_manager_test, final_test) {
     std::chrono::duration<float> duration_aegis = start_timer - stop_timer;
     std::cout<<"custom:"<<duration_aegis*1000<<"ms\n";
 
-    // the regular malloc
+    // the regular malloc approach
     start_timer = std::chrono::high_resolution_clock::now();
 
     for (int loop = 0; loop < 1024; loop++){ auto pointer = malloc(1);}
@@ -32,6 +32,8 @@ TEST(memory_manager_test, final_test) {
     std::cout<<"regular:"<<duration_aegis*1000<<"ms\n";
     
 }
+
+TEST(memory_manager_test, optimization_test){}
 
 
 int main(int argc, char** argv) {
