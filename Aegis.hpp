@@ -99,7 +99,18 @@ namespace Aegis_MemoryManager{
             currentAvailableChunkNumber += requestedSize_memory / (1024*1024) + 1;
 
             // now request the acquired memory blocks
+            std::generate_n(std::back_inserter(memoryPool), requestedBlockNumber, []() {
+                return std::make_unique<DefaultChunkOfMemory>();
+            });
 
+            // push the current position and index into the allocation recorder
+            memoryAddresses_Optimized.reserve(memoryAddresses_Optimized.size() + 1);
+            memoryAddresses_Optimized.back() = std::make_unique<Memory_Representation_Unified>(Memory_Representation_Unified{
+                previousChunkNumber, 0, AllocationIndex
+            });
+
+            allocationRecorder_Optimized.insert(allocationRecorder_Optimized.end(), {AllocationIndex, memoryAddresses_Optimized.size() - 1});
+            return AllocationIndex;
         }
 
         std::expected<void, std::string> DeleteMemory(std::size_t requestedDeletion){
