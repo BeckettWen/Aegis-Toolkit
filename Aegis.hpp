@@ -202,7 +202,7 @@ namespace Aegis_MemoryManager{
 
                 const Datatype* data_converted = static_cast<const Datatype*>(data);
 
-                
+                for (auto item: data_converted){}
                 return {};
             }
 
