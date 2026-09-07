@@ -30,6 +30,16 @@ TEST(memory_manager_test, final_test) {
     duration_aegis = start_timer - stop_timer;
 
     std::cout<<"after optimization"<<duration_aegis.count()*1000<<"ms\n";
+
+    // this is the original test which tests the optimized version vs the raw malloc function
+    start_timer = std::chrono::high_resolution_clock::now();
+
+    for (int loop = 0; loop < 1024; loop ++){ malloc(1); }
+
+    stop_timer = std::chrono::high_resolution_clock::now();
+    duration_aegis = start_timer - stop_timer;
+
+    std::cout<<"Raw malloc"<<duration_aegis.count()*1000<<"ms\n";
     
 }
 

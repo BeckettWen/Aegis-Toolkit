@@ -13,6 +13,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <array>
+#include <map>
 #include <thread>
 #include <tuple>
 #include <unordered_map>
@@ -58,7 +59,7 @@ namespace Aegis_MemoryManager{
 
         // this holds all of the unified memory address
         std::vector<std::unique_ptr<Memory_Representation_Unified>> memoryAddresses_Optimized;
-        std::unordered_map<std::size_t, std::size_t> allocationRecorder_Optimized;
+        std::map<std::size_t, std::size_t> allocationRecorder_Optimized;
 
         public:
             Aegis_allocator(): currentAvailableChunkNumber(0), previousChunkNumber(0){
@@ -187,6 +188,22 @@ namespace Aegis_MemoryManager{
                 // here is the end of the record find result
                 }
             // here is the end of the whole writting function
+            }
+
+        // here will set the optimized version of the write function
+        template<typename Datatype>
+        std::expected<void, std::string> writeDataToMemory_Optimized(std::size_t requestedMemory, const void* data) {
+                // first search for the allocation record
+                std::map<std::size_t, std::size_t>::iterator recordFindResult =
+                    allocationRecorder_Optimized.find(requestedMemory);
+                if (recordFindResult == allocationRecorder_Optimized.end()) {
+                    return std::unexpected<std::string>("Requested Memory Not Found");
+                }
+
+                const Datatype* data_converted = static_cast<const Datatype*>(data);
+
+                
+                return {};
             }
 
             public:
