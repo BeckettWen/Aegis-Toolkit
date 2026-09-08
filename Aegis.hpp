@@ -19,6 +19,8 @@
 #include <unordered_map>
 #include <vector>
 
+#define Default_Memory_Size 1024*1024
+
 using DefaultChunkOfMemory = std::array<std::byte, 1024*1024>;
 using MemoryAddress = std::tuple<std::size_t, std::size_t>;
 
@@ -54,7 +56,9 @@ namespace Aegis_MemoryManager{
         struct Memory_Representation_Unified {
             std::size_t block_number;
             std::size_t withinBlock_number;
+            std::array<std::size_t, 2> current_index;
             std::size_t allocation_index;
+            std::size_t size;
         };
 
         // this holds all of the unified memory address
@@ -97,7 +101,7 @@ namespace Aegis_MemoryManager{
             // the original process of the allocation to record the memory address and give a unique index
             std::size_t requestedBlockNumber = requestedSize_memory / (1024*1024);
             previousChunkNumber = currentAvailableChunkNumber;
-            currentAvailableChunkNumber += requestedSize_memory / (1024*1024) + 1;
+            currentAvailableChunkNumber += requestedBlockNumber + 1;
 
             // now request the acquired memory blocks
             std::generate_n(std::back_inserter(memoryPool), requestedBlockNumber, []() {
@@ -107,7 +111,7 @@ namespace Aegis_MemoryManager{
             // push the current position and index into the allocation recorder
             memoryAddresses_Optimized.reserve(memoryAddresses_Optimized.size() + 1);
             memoryAddresses_Optimized.back() = std::make_unique<Memory_Representation_Unified>(Memory_Representation_Unified{
-                previousChunkNumber, 0, AllocationIndex
+                previousChunkNumber, 0, {0, 0}, AllocationIndex, requestedBlockNumber
             });
 
             allocationRecorder_Optimized.insert(allocationRecorder_Optimized.end(), {AllocationIndex, memoryAddresses_Optimized.size() - 1});
@@ -202,7 +206,33 @@ namespace Aegis_MemoryManager{
 
                 const Datatype* data_converted = static_cast<const Datatype*>(data);
 
-                for (auto item: data_converted){}
+                // first calculate the idle memory size
+                std::size_t idle_memory_size =
+                    memoryAddresses_Optimized[recordFindResult->second]->size -
+                        (memoryAddresses_Optimized[recordFindResult->second]->current_index[0]
+                - memoryAddresses_Optimized[recordFindResult->second]->block_number - 1) * Default_Memory_Size
+                - memoryAddresses_Optimized[recordFindResult->second]->current_index[1] - 1;
+
+                if (idle_memory_size < std::size(data_converted)) {
+                    return std::unexpected<std::string>("No Enough Memory");
+                }
+
+                std::size_t temp_block_indicator = memoryAddresses_Optimized[recordFindResult->second]->current_index[0];
+                std::size_t temp_withinblock_indicator = memoryAddresses_Optimized[recordFindResult->second]->current_index[1];
+
+                std::byte temporary_data;
+
+                // now writes the data into the memory
+                for (auto item: data_converted) {
+                    // the core writing mechanism
+                    temporary_data = static_cast<std::byte>(item);
+                    (*memoryPool[temp_block_indicator])[temp_withinblock_indicator] = temporary_data;
+
+                    if (temp_withinblock_indicator == 1024*1024){ temp_block_indicator ++; temp_withinblock_indicator = 0;}
+                    else{ temp_withinblock_indicator ++;}
+                }
+
+                delete data_converted;
                 return {};
             }
 
