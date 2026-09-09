@@ -8,15 +8,16 @@ TEST(memory_manager_test, final_test) {
 
     Aegis_MemoryManager::Aegis_allocator test_memory_manager;
 
+    std::cout<<"Test Version: "<<test_memory_manager.major_version<<" "<<test_memory_manager.minor_version<<"\n";
 
     // the custom aegis allocator
+    std::chrono::time_point<std::chrono::high_resolution_clock> stop_timer;
     std::chrono::time_point<std::chrono::high_resolution_clock> start_timer
         = std::chrono::high_resolution_clock::now();
 
     test_memory_manager.allocateMemory(1024);
 
-    std::chrono::time_point<std::chrono::high_resolution_clock> stop_timer
-        = std::chrono::high_resolution_clock::now();
+    stop_timer = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<float> duration_aegis = start_timer - stop_timer;
     std::cout<<"before optimization"<<duration_aegis.count() * 1000<<"ms\n";
@@ -43,7 +44,14 @@ TEST(memory_manager_test, final_test) {
     
 }
 
-TEST(memory_manager_test, optimization_test){}
+// here will test all the optimized functions and the original function
+TEST(memory_manager_test, optimization_test) {
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_timer, stop_timer;
+    start_timer = std::chrono::high_resolution_clock::now();
+
+    // the optimized write function
+
+}
 
 
 int main(int argc, char** argv) {

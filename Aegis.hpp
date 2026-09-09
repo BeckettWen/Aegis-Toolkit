@@ -30,7 +30,8 @@ namespace Aegis_MemoryManager{
         //use the arena structure first, may switch to a new high efficiency structure later
         friend class lunarfilament;
         public:
-            std::string version = "Version 1 Update 1";
+        std::string major_version = "Version Calcium";
+        std::string minor_version = "10240.38";
 
         private:
         // using the 1 megabytes memory as the allocator's step inside the header file
@@ -265,6 +266,11 @@ namespace Aegis_MemoryManager{
                 howmanychunks = std::get<1>(*temp_findResult);
 
                 
+            }
+
+        // this is the optimized read Data api
+        std::expected<std::vector<std::byte>, std::string> readData_Optimized(std::size_t& memoryRepresentation) {
+
             }
 
 
