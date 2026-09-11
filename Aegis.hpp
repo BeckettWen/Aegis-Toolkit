@@ -30,8 +30,9 @@ namespace Aegis_MemoryManager{
         //use the arena structure first, may switch to a new high efficiency structure later
         friend class lunarfilament;
         public:
-        std::string major_version = "Version Calcium";
-        std::string minor_version = "10240.38";
+        std::string major_version = "Tellurium";
+        std::string minor_version = "10260";
+        std::string is_in_what_phase = "Beta";
 
         private:
         // using the 1 megabytes memory as the allocator's step inside the header file
@@ -265,10 +266,23 @@ namespace Aegis_MemoryManager{
                 if(temp_findResult == allocatedChunkSize.end()){ return std::unexpected<std::string>("Error: No Eligible Memory");}
                 howmanychunks = std::get<1>(*temp_findResult);
 
-                
+                // now finally reads the data
+                std::size_t temp_chunk_number = howmanychunks;
+                while (howmanychunks >= 0) {
+                    temp_chunk_number = temp_chunk_number - howmanychunks;
+                    temporary_finalResult.insert(temporary_finalResult.begin() ,
+                        memoryPool[memoryChunkIndicator + temp_chunk_number]->begin(),
+                        memoryPool[memoryChunkIndicator + temp_chunk_number]->end());
+
+                    howmanychunks -- ;
+                }
+
+                return temporary_finalResult;
             }
 
         // this is the optimized read Data api
+        // still in the Design phase, will publish it in the next version
+        // the next version is named "Tellurium"
         std::expected<std::vector<std::byte>, std::string> readData_Optimized(std::size_t& memoryRepresentation) {
 
             }

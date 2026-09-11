@@ -4,7 +4,9 @@
 
 #include <benchmark/benchmark.h>
 
-static void Benchmark_memory_manager(benchmark::State& state){}
+static void Benchmark_memory_manager(benchmark::State& state) {
+
+}
 
 BENCHMARK(Benchmark_memory_manager);
 
