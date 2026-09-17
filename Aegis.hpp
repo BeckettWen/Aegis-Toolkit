@@ -31,7 +31,7 @@ namespace Aegis_MemoryManager{
         friend class lunarfilament;
         public:
         std::string major_version = "Tellurium";
-        std::string minor_version = "10260";
+        std::string minor_version = "10265";
         std::string is_in_what_phase = "Beta";
 
         private:
@@ -284,7 +284,26 @@ namespace Aegis_MemoryManager{
         // still in the Design phase, will publish it in the next version
         // the next version is named "Tellurium"
         std::expected<std::vector<std::byte>, std::string> readData_Optimized(std::size_t& memoryRepresentation) {
+                // first need to obtain the allocation record
+                std::map<std::size_t, std::size_t>::iterator allocationRecord_find_result =
+                    allocationRecorder_Optimized.find(memoryRepresentation);
+                if (allocationRecord_find_result == allocationRecorder_Optimized.end()) {
+                    // return the error message with the readable string format
+                    return std::unexpected<std::string>("Requested Memory Missing");
+                }
 
+                // now reads the data and put it into the temporary array
+                std::size_t find_result_index = allocationRecord_find_result->second;
+                std::vector<std::byte> temp_result_optimized;
+                std::size_t loop = 0;
+                while (memoryAddresses_Optimized[find_result_index]->size > loop%(1024*1024)) {
+                    temp_result_optimized.emplace_back(
+                        (*memoryPool[memoryAddresses_Optimized[find_result_index]->block_number])[loop - (loop%(1024*1024))*1024*1024]
+                        );
+                    loop++;
+                }
+
+                return temp_result_optimized;
             }
 
 
