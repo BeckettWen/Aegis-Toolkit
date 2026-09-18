@@ -30,6 +30,7 @@ namespace Aegis_MemoryManager{
         //use the arena structure first, may switch to a new high efficiency structure later
         friend class lunarfilament;
         public:
+        // the successor to the version Tellurium is named "Krypton"
         std::string major_version = "Tellurium";
         std::string minor_version = "10265";
         std::string is_in_what_phase = "Beta";
@@ -67,6 +68,11 @@ namespace Aegis_MemoryManager{
         std::vector<std::unique_ptr<Memory_Representation_Unified>> memoryAddresses_Optimized;
         std::map<std::size_t, std::size_t> allocationRecorder_Optimized;
 
+        // here is the struct that needed in the optimize memory API
+        struct Memory_Idle_Optimized {
+            std::vector<std::unique_ptr<std::array<std::size_t, 2>>> availableMemory;
+        };
+
         public:
             Aegis_allocator(): currentAvailableChunkNumber(0), previousChunkNumber(0){
                 memoryPool.clear();
@@ -79,6 +85,7 @@ namespace Aegis_MemoryManager{
 
         public:
         //memory allocation, return the index to achieve maximize simplicity
+        // ready to be deprecated in version
         std::size_t allocateMemory(std::size_t requestedSize){
                 previousChunkNumber = currentAvailableChunkNumber;
                 currentAvailableChunkNumber += requestedSize / (1024*1024) + 1;
@@ -306,6 +313,15 @@ namespace Aegis_MemoryManager{
                 return temp_result_optimized;
             }
 
+        // this is the special memory optimization API
+        std::expected<void, std::string> Memory_Optimization() {
+                // first, locate those blank chunks
+                // notice that this is still in the early design phase, and lots of can change
+                // well, hope the version Tellurium can make the release in October
+                for (const std::unique_ptr<Memory_Representation_Unified>& item: memoryAddresses_Optimized) {
+                    
+                }
+            }
 
     //the end bracket of the class Aegis_allocator
     };
