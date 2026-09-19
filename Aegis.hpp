@@ -63,15 +63,18 @@ namespace Aegis_MemoryManager{
             std::size_t allocation_index;
             std::size_t size;
         };
+        struct Memory_Slice {
+            std::weak_ptr<Memory_Representation_Unified> Memory_tobe_Sliced;
+            std::size_t slice_label;
+        };
 
         // this holds all of the unified memory address
         std::vector<std::unique_ptr<Memory_Representation_Unified>> memoryAddresses_Optimized;
         std::map<std::size_t, std::size_t> allocationRecorder_Optimized;
+        std::map<std::size_t, Memory_Slice> memory_Fragmentation_table;
 
         // here is the struct that needed in the optimize memory API
-        struct Memory_Idle_Optimized {
-            std::vector<std::unique_ptr<std::array<std::size_t, 2>>> availableMemory;
-        };
+
 
         public:
             Aegis_allocator(): currentAvailableChunkNumber(0), previousChunkNumber(0){
@@ -314,13 +317,21 @@ namespace Aegis_MemoryManager{
             }
 
         // this is the special memory optimization API
-        std::expected<void, std::string> Memory_Optimization() {
+        std::expected<void, std::string> Memory_Compression() {
                 // first, locate those blank chunks
                 // notice that this is still in the early design phase, and lots of can change
                 // well, hope the version Tellurium can make the release in October
-                for (const std::unique_ptr<Memory_Representation_Unified>& item: memoryAddresses_Optimized) {
+                const std::unique_ptr<Memory_Representation_Unified>& Optimization_Object =
+                    memoryAddresses_Optimized.back();
+
+                // this is the temporary pointer that is used to fragment that memory
+                std::array<std::size_t, 2> memory_read_index = memoryAddresses_Optimized.back()->current_index;
+
+                // this slices the optimized memory and record that fragmentation
+                for (const std::unique_ptr<Memory_Representation_Unified>& item : memoryAddresses_Optimized) {
                     
                 }
+
             }
 
     //the end bracket of the class Aegis_allocator
