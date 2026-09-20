@@ -156,7 +156,8 @@ namespace Aegis_MemoryManager{
             // and that is the official supported data type when writing examples and do some demonstrations
         public:
             template<typename Datatype>
-            std::expected<void, std::string> wirteDataToMemory(std::size_t requestedMemory, const void* data){
+            requires std::is_trivially_copyable_v<Datatype>
+            std::expected<void, std::string> wirteDataToMemory(std::size_t requestedMemory, const Datatype* data){
                 // first you need to get the actual address and the avaliable chunks
                 std::unordered_map<std::size_t, std::size_t>::iterator recordFindResult = allocationRecorder.find(requestedMemory);
                 if (recordFindResult == allocationRecorder.end()){ return std::unexpected<std::string>("Error: From Memory Record Finding"); }
@@ -208,7 +209,8 @@ namespace Aegis_MemoryManager{
 
         // here will set the optimized version of the write function
         template<typename Datatype>
-        std::expected<void, std::string> writeDataToMemory_Optimized(std::size_t requestedMemory, const void* data) {
+        requires std::is_trivially_copyable_v<Datatype>
+        std::expected<void, std::string> writeDataToMemory_Optimized(std::size_t requestedMemory, const Datatype* data) {
                 // first search for the allocation record
                 std::map<std::size_t, std::size_t>::iterator recordFindResult =
                     allocationRecorder_Optimized.find(requestedMemory);
@@ -325,12 +327,42 @@ namespace Aegis_MemoryManager{
                     memoryAddresses_Optimized.back();
 
                 // this is the temporary pointer that is used to fragment that memory
-                std::array<std::size_t, 2> memory_read_index = memoryAddresses_Optimized.back()->current_index;
+                std::array<std::size_t, 2> memory_read_index = {memoryAddresses_Optimized.back()->block_number, 0};
+                std::byte temp_data;
+                std::array<std::size_t, 2> memory_provide_space;
 
                 // this slices the optimized memory and record that fragmentation
                 for (const std::unique_ptr<Memory_Representation_Unified>& item : memoryAddresses_Optimized) {
-                    
+                    if (item->withinBlock_number == Default_Memory_Size - 1){ continue;}
+
+                    //assign the temporary recorder the recorder of the memory that provides the space
+                    memory_provide_space = item->current_index;
+
+                    // this makes sure the memory is fully used, by looping until the write finished or no memory available
+                    while (item->withinBlock_number != Default_Memory_Size - 1 &&
+                        memory_read_index[1] != memoryAddresses_Optimized.back()->current_index[1]) {
+                        // read the data out of the memory and write the data back to the idle space
+                        (*memoryPool[memory_provide_space[0]])[memory_provide_space[1]] =
+                            (*memoryPool[memory_read_index[0]])[memory_read_index[1]];
+
+                        // now increment the index
+                        if (memory_read_index[1] == Default_Memory_Size - 1) {
+                            memory_read_index[1] = 0;
+                            memory_read_index[0]++;
+                        }
+                        else{memory_read_index[1] ++;}
+
+                        if (memory_provide_space[1] == Default_Memory_Size - 1) {
+                            memory_provide_space[1] = 0;
+                            memory_provide_space[0]++;
+                        }
+                        else{memory_provide_space[1] ++;}
+                    }
+                    // push the slice index and the slice into the recorder
+
                 }
+
+                // now release the original memory
 
             }
 

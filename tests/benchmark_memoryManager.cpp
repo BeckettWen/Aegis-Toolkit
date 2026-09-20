@@ -35,7 +35,7 @@ static void BM_ReadData(benchmark::State& state) {
     Aegis_MemoryManager::Aegis_allocator allocator;
     std::size_t handle = allocator.allocateMemory(state.range(0));
     for (auto _ : state) {
-        auto result = allocator.readData(handle);
+        auto result = allocator.readData_Optimized(handle);
         benchmark::DoNotOptimize(result);
     }
 }
