@@ -69,9 +69,10 @@ namespace Aegis_MemoryManager{
         };
 
         // this holds all of the unified memory address
-        std::vector<std::unique_ptr<Memory_Representation_Unified>> memoryAddresses_Optimized;
+        std::vector<std::shared_ptr<Memory_Representation_Unified>> memoryAddresses_Optimized;
         std::map<std::size_t, std::size_t> allocationRecorder_Optimized;
         std::map<std::size_t, Memory_Slice> memory_Fragmentation_table;
+        std::size_t Memory_Slice_Allocation_index = 0;
 
         // here is the struct that needed in the optimize memory API
 
@@ -323,16 +324,17 @@ namespace Aegis_MemoryManager{
                 // first, locate those blank chunks
                 // notice that this is still in the early design phase, and lots of can change
                 // well, hope the version Tellurium can make the release in October
-                const std::unique_ptr<Memory_Representation_Unified>& Optimization_Object =
+                const std::shared_ptr<Memory_Representation_Unified>& Optimization_Object =
                     memoryAddresses_Optimized.back();
 
                 // this is the temporary pointer that is used to fragment that memory
                 std::array<std::size_t, 2> memory_read_index = {memoryAddresses_Optimized.back()->block_number, 0};
                 std::byte temp_data;
                 std::array<std::size_t, 2> memory_provide_space;
+                std::shared_ptr<Memory_Slice> temp_storage_memory_slice;
 
                 // this slices the optimized memory and record that fragmentation
-                for (const std::unique_ptr<Memory_Representation_Unified>& item : memoryAddresses_Optimized) {
+                for (const std::shared_ptr<Memory_Representation_Unified>& item : memoryAddresses_Optimized) {
                     if (item->withinBlock_number == Default_Memory_Size - 1){ continue;}
 
                     //assign the temporary recorder the recorder of the memory that provides the space
@@ -358,12 +360,19 @@ namespace Aegis_MemoryManager{
                         }
                         else{memory_provide_space[1] ++;}
                     }
-                    // push the slice index and the slice into the recorder
 
+                    // push the slice index and the slice into the recorder
+                    temp_storage_memory_slice->slice_label = Memory_Slice_Allocation_index;
+                    temp_storage_memory_slice->Memory_tobe_Sliced = memoryAddresses_Optimized.back();
+                    memory_Fragmentation_table.insert({Memory_Slice_Allocation_index, (*temp_storage_memory_slice)});
                 }
 
                 // now release the original memory
+                for (int range = 0; range<memoryAddresses_Optimized.back()->size; range++) {
+                    memoryPool[memoryAddresses_Optimized.back()->block_number].reset();
+                }
 
+                return {};
             }
 
     //the end bracket of the class Aegis_allocator
