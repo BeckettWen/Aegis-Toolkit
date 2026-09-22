@@ -15,6 +15,7 @@ find_package(benchmark REQUIRED)
 # Add your executable
 add_executable(tests
     tests/test_memoryManager.cpp
+        StateMachine.hpp
         # Add other test source files here
 )
 

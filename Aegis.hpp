@@ -89,26 +89,6 @@ namespace Aegis_MemoryManager{
 
         public:
         //memory allocation, return the index to achieve maximize simplicity
-        // ready to be deprecated in version
-        std::size_t allocateMemory(std::size_t requestedSize){
-                previousChunkNumber = currentAvailableChunkNumber;
-                currentAvailableChunkNumber += requestedSize / (1024*1024) + 1;
-                memoryPool.reserve(memoryPool.size() + currentAvailableChunkNumber - previousChunkNumber);
-                std::generate_n(std::back_inserter(memoryPool), currentAvailableChunkNumber - previousChunkNumber, []() {
-                    return std::make_unique<DefaultChunkOfMemory>();
-                });
-
-                // get the memory address, aka the special index
-                AllocationIndex ++;
-                temporaryAddress = std::make_tuple(currentAvailableChunkNumber, 0);
-                memoryAddresses.insert(memoryAddresses.end(), std::make_tuple(temporaryAddress, AllocationIndex));
-
-                allocationRecorder.insert(allocationRecorder.end(), {AllocationIndex, currentAvailableChunkNumber});
-
-                allocatedChunkSize.insert(allocatedChunkSize.end(), {AllocationIndex, requestedSize / (1024*1024) + 1});
-                return memoryAddresses.size();
-            }
-
         // optimized memory allocation function
         std::size_t allocateMemory_Optimized(std::size_t requestedSize_memory) {
             // the original process of the allocation to record the memory address and give a unique index
@@ -122,7 +102,7 @@ namespace Aegis_MemoryManager{
             });
 
             // push the current position and index into the allocation recorder
-            memoryAddresses_Optimized.reserve(memoryAddresses_Optimized.size() + 1);
+            memoryAddresses_Optimized.resize(memoryAddresses_Optimized.size() + 1);
             memoryAddresses_Optimized.back() = std::make_unique<Memory_Representation_Unified>(Memory_Representation_Unified{
                 previousChunkNumber, 0, {0, 0}, AllocationIndex, requestedBlockNumber
             });
@@ -263,35 +243,6 @@ namespace Aegis_MemoryManager{
                 else{ return (*findResult).second;}
             }
 
-            std::expected<std::vector<std::byte>, std::string> readData(std::size_t& memoryRepresentation){
-                // construct a temporary byte vector
-                std::vector<std::byte> temporary_finalResult;
-                std::unordered_map<std::size_t, std::size_t>::iterator temp_findResult;
-                std::size_t memoryChunkIndicator, howmanychunks;
-
-                // assign the memory chunk indicator with the find result of the memory find process
-                temp_findResult = allocationRecorder.find(memoryRepresentation);
-                if(temp_findResult == allocationRecorder.end()){ return std::unexpected<std::string>("Error: Memory not found");}
-                memoryChunkIndicator = std::get<1>(*temp_findResult);
-
-                // find the allocated chunk size according to the index
-                temp_findResult = allocatedChunkSize.find(memoryRepresentation);
-                if(temp_findResult == allocatedChunkSize.end()){ return std::unexpected<std::string>("Error: No Eligible Memory");}
-                howmanychunks = std::get<1>(*temp_findResult);
-
-                // now finally reads the data
-                std::size_t temp_chunk_number = howmanychunks;
-                while (howmanychunks >= 0) {
-                    temp_chunk_number = temp_chunk_number - howmanychunks;
-                    temporary_finalResult.insert(temporary_finalResult.begin() ,
-                        memoryPool[memoryChunkIndicator + temp_chunk_number]->begin(),
-                        memoryPool[memoryChunkIndicator + temp_chunk_number]->end());
-
-                    howmanychunks -- ;
-                }
-
-                return temporary_finalResult;
-            }
 
         // this is the optimized read Data api
         // still in the Design phase, will publish it in the next version
@@ -309,11 +260,15 @@ namespace Aegis_MemoryManager{
                 std::size_t find_result_index = allocationRecord_find_result->second;
                 std::vector<std::byte> temp_result_optimized;
                 std::size_t loop = 0;
-                while (memoryAddresses_Optimized[find_result_index]->size > loop%(1024*1024)) {
-                    temp_result_optimized.emplace_back(
-                        (*memoryPool[memoryAddresses_Optimized[find_result_index]->block_number])[loop - (loop%(1024*1024))*1024*1024]
-                        );
-                    loop++;
+                for (;loop < memoryAddresses_Optimized[find_result_index]->size;loop++) {
+                    if (memoryPool[memoryAddresses_Optimized[find_result_index]->block_number + loop] == nullptr) {
+                        continue;
+                    }
+
+                    // now after the ensure of the memory exists, finally read the data
+                    for (std::byte item: (*memoryPool[memoryAddresses_Optimized[find_result_index]->block_number + loop])) {
+                        temp_result_optimized.emplace_back(item);
+                    }
                 }
 
                 return temp_result_optimized;

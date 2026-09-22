@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <functional>
 #include <any>
+#include <string>
 
 using event_type_General = std::function<void()>;
 
