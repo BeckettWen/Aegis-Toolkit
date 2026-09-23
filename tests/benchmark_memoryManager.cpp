@@ -8,7 +8,7 @@
 static void BM_AllocateMemory(benchmark::State& state) {
     for (auto _ : state) {
         Aegis_MemoryManager::Aegis_allocator allocator;
-        benchmark::DoNotOptimize(allocator.allocateMemory(state.range(0)));
+        benchmark::DoNotOptimize(allocator.allocateMemory_Optimized(state.range(0)));
     }
 }
 BENCHMARK(BM_AllocateMemory)->Range(1024, 1024 * 1024 * 10);
@@ -23,7 +23,7 @@ BENCHMARK(BM_AllocateMemory_Optimized)->Range(1024, 1024 * 1024 * 10);
 
 static void BM_GetAllocatedSize(benchmark::State& state) {
     Aegis_MemoryManager::Aegis_allocator allocator;
-    std::size_t handle = allocator.allocateMemory(1024);
+    std::size_t handle = allocator.allocateMemory_Optimized(1024);
     for (auto _ : state) {
         auto result = allocator.getAllocatedSize(handle);
         benchmark::DoNotOptimize(result);
@@ -33,7 +33,7 @@ BENCHMARK(BM_GetAllocatedSize);
 
 static void BM_ReadData(benchmark::State& state) {
     Aegis_MemoryManager::Aegis_allocator allocator;
-    std::size_t handle = allocator.allocateMemory(state.range(0));
+    std::size_t handle = allocator.allocateMemory_Optimized(state.range(0));
     for (auto _ : state) {
         auto result = allocator.readData_Optimized(handle);
         benchmark::DoNotOptimize(result);
@@ -45,7 +45,7 @@ static void BM_DeleteMemory(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
         Aegis_MemoryManager::Aegis_allocator allocator;
-        std::size_t handle = allocator.allocateMemory(state.range(0));
+        std::size_t handle = allocator.allocateMemory_Optimized(state.range(0));
         state.ResumeTiming();
 
         benchmark::DoNotOptimize(allocator.DeleteMemory(handle));

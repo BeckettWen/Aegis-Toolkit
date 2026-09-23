@@ -190,8 +190,8 @@ namespace Aegis_MemoryManager{
 
         // here will set the optimized version of the write function
         template<typename Datatype>
-        requires std::is_trivially_copyable_v<Datatype>
-        std::expected<void, std::string> writeDataToMemory_Optimized(std::size_t requestedMemory, const Datatype* data) {
+        // requires std::is_trivially_copyable_v<Datatype>
+        std::expected<void, std::string> writeDataToMemory_Optimized(std::size_t requestedMemory, const Datatype& data) {
                 // first search for the allocation record
                 std::map<std::size_t, std::size_t>::iterator recordFindResult =
                     allocationRecorder_Optimized.find(requestedMemory);
@@ -199,7 +199,7 @@ namespace Aegis_MemoryManager{
                     return std::unexpected<std::string>("Requested Memory Not Found");
                 }
 
-                const Datatype* data_converted = static_cast<const Datatype*>(data);
+                // const Datatype* data_converted = static_cast<const Datatype*>(data);
 
                 // first calculate the idle memory size
                 std::size_t idle_memory_size =
@@ -208,8 +208,15 @@ namespace Aegis_MemoryManager{
                 - memoryAddresses_Optimized[recordFindResult->second]->block_number - 1) * Default_Memory_Size
                 - memoryAddresses_Optimized[recordFindResult->second]->current_index[1] - 1;
 
-                if (idle_memory_size < std::size(data_converted)) {
-                    return std::unexpected<std::string>("No Enough Memory");
+                if constexpr (std::is_same_v<Datatype, const char*>) {
+                    if (idle_memory_size < std::strlen(data)) {
+                        return std::unexpected<std::string>("No Enough Memory");
+                    }
+                }
+                else {
+                    if (idle_memory_size < std::size(data)) {
+                        return std::unexpected<std::string>("No Enough Memory");
+                    }
                 }
 
                 std::size_t temp_block_indicator = memoryAddresses_Optimized[recordFindResult->second]->current_index[0];
@@ -218,7 +225,7 @@ namespace Aegis_MemoryManager{
                 std::byte temporary_data;
 
                 // now writes the data into the memory
-                for (auto item: data_converted) {
+                for (auto item: data) {
                     // the core writing mechanism
                     temporary_data = static_cast<std::byte>(item);
                     (*memoryPool[temp_block_indicator])[temp_withinblock_indicator] = temporary_data;
@@ -227,7 +234,7 @@ namespace Aegis_MemoryManager{
                     else{ temp_withinblock_indicator ++;}
                 }
 
-                delete data_converted;
+                // delete data;
                 return {};
             }
 
