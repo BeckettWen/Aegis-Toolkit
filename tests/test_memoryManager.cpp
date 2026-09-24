@@ -13,6 +13,15 @@ TEST(memory_manager_test, read_memory_test) {
     for (std::byte item: read_data.value()) {
         std::cout<<static_cast<char>(std::to_integer<unsigned char>(item));
     }
+    std::cout<<"\n";
+
+    std::vector<int> data_vector = {0,1,2};
+    allocator.writeDataToMemory_Optimized<std::vector<int>>(index, data_vector);
+    auto read_test_2 = allocator.readData_Optimized(index);
+    for (std::byte item: read_data.value()) {
+        std::cout<<static_cast<int>(std::to_integer<int>(item));
+    }
+    std::cout<<"\n";
 }
 
 // here will test all the optimized functions and the original function
