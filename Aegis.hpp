@@ -1,6 +1,6 @@
 //welcome to the Aegis memory manager
 
-// ready to be deprecated and become a single module
+// this version is set to solve the problem of different bugs and optimization
 #pragma once
 
 #include <algorithm>
@@ -131,6 +131,20 @@ namespace Aegis_MemoryManager{
                 else{ return std::unexpected<std::string>("Requested area doesn't exist"); }
             }
 
+        std::expected<void, std::string> Delete_memory_Tellurium(std::size_t& memory_Index) {
+            std::map<std::size_t, std::size_t>::iterator request_find_result;
+            request_find_result = allocationRecorder_Optimized.find(memory_Index);
+            if ( request_find_result == allocationRecorder_Optimized.end()) {
+                // check if the request is valid and mis-terminated
+                if (request_find_result->first == memory_Index){}
+                else{ return std::unexpected<std::string>("Memory Not Found");}
+            }
+
+            Memory_Representation_Unified& memory_address_Reference =
+                *memoryAddresses_Optimized[request_find_result->second];
+            
+        }
+
 
             // i want you to notice something that though the function theoratically accepts the data with every type
             // but still, if you use the general vector type would be much easier
@@ -260,6 +274,8 @@ namespace Aegis_MemoryManager{
                     allocationRecorder_Optimized.find(memoryRepresentation);
                 if (allocationRecord_find_result == allocationRecorder_Optimized.end()) {
                     // return the error message with the readable string format
+                    // this needs further investigation cause if the index is
+                    // occasionally in the end, then the valid request would be terminated
                     return std::unexpected<std::string>("Requested Memory Missing");
                 }
 
