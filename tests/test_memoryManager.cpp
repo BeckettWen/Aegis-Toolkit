@@ -4,40 +4,11 @@
 #include <chrono>
 
 
-TEST(memory_manager_test, read_memory_test) {
-    Aegis_MemoryManager::Aegis_allocator allocator;
-    std::size_t index = allocator.allocateMemory_Optimized(1024*1024);
-    std::string data = "this is the test string";
-    allocator.writeDataToMemory_Optimized<std::string>(index, data);
-    auto read_data = allocator.readData_Optimized(index);
-    for (std::byte item: read_data.value()) {
-        std::cout<<static_cast<char>(std::to_integer<unsigned char>(item));
-    }
-    std::cout<<"\n";
-
-    std::vector<int> data_vector = {0,1,2};
-    allocator.writeDataToMemory_Optimized<std::vector<int>>(index, data_vector);
-    auto read_test_2 = allocator.readData_Optimized(index);
-    for (std::byte item: read_data.value()) {
-        std::cout<<static_cast<int>(std::to_integer<int>(item));
-    }
-    std::cout<<"\n";
-}
-
-// here will test all the optimized functions and the original function
-TEST(memory_manager_test, optimization_test) {
-    std::chrono::time_point<std::chrono::high_resolution_clock> start_timer, stop_timer;
-    start_timer = std::chrono::high_resolution_clock::now();
-
-    // the optimized write function
-
-}
-
 TEST(memory_manager_test, memory_Compression_test) {
     Aegis_MemoryManager::Aegis_allocator test_allocator;
     auto index_holder = test_allocator.allocateMemory_Optimized(1024*512);
     auto index_to_be_fragmented = test_allocator.allocateMemory_Optimized(1024*512);
-
+    test_allocator.Memory_Compression();
 }
 
 

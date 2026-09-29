@@ -1,5 +1,11 @@
 
 cmake_minimum_required(VERSION 3.14)
+
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Default build type" FORCE)
+endif()
+
+
 project(Aegis LANGUAGES CXX)
 
 # Set C++ standard (C++23 or C++26 if supported)

@@ -309,7 +309,7 @@ namespace Aegis_MemoryManager{
                 std::array<std::size_t, 2> memory_read_index = {memoryAddresses_Optimized.back()->block_number, 0};
                 std::byte temp_data;
                 std::array<std::size_t, 2> memory_provide_space;
-                std::shared_ptr<Memory_Slice> temp_storage_memory_slice;
+                std::shared_ptr<Memory_Slice> temp_storage_memory_slice = std::make_shared<Memory_Slice>();
 
                 // this slices the optimized memory and record that fragmentation
                 for (const std::shared_ptr<Memory_Representation_Unified>& item : memoryAddresses_Optimized) {
@@ -340,7 +340,10 @@ namespace Aegis_MemoryManager{
                     }
 
                     // push the slice index and the slice into the recorder
+
+                    //this line is where the segmentation fault occurs
                     temp_storage_memory_slice->slice_label = Memory_Slice_Allocation_index;
+
                     temp_storage_memory_slice->Memory_tobe_Sliced = memoryAddresses_Optimized.back();
                     memory_Fragmentation_table.insert({Memory_Slice_Allocation_index, (*temp_storage_memory_slice)});
                 }
