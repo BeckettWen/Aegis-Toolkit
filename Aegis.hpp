@@ -32,7 +32,7 @@ namespace Aegis_MemoryManager{
         public:
         // the successor to the version Tellurium is named "Krypton"
         std::string major_version = "Tellurium";
-        std::string minor_version = "10265";
+        std::string minor_version = "10267";
         std::string is_in_what_phase = "Beta";
 
         private:
@@ -268,7 +268,9 @@ namespace Aegis_MemoryManager{
         // this is the optimized read Data api
         // still in the Design phase, will publish it in the next version
         // the next version is named "Tellurium"
-        std::expected<std::vector<std::byte>, std::string> readData_Optimized(std::size_t& memoryRepresentation) {
+            std::expected<std::vector<std::byte>, std::string> readData_Optimized(std::size_t& memoryRepresentation) {
+                
+                std::vector<std::byte> temp_result_optimized;
                 // first need to obtain the allocation record
                 std::map<std::size_t, std::size_t>::iterator allocationRecord_find_result =
                     allocationRecorder_Optimized.find(memoryRepresentation);
@@ -276,12 +278,18 @@ namespace Aegis_MemoryManager{
                     // return the error message with the readable string format
                     // this needs further investigation cause if the index is
                     // occasionally in the end, then the valid request would be terminated
-                    return std::unexpected<std::string>("Requested Memory Missing");
+                    if(allocationRecord_find_result->first != memoryRepresentation){
+                        return std::unexpected<std::string>("Requested Memory Missing");
+                    }
+                    else{
+                        std::expected<std::vector<std::byte>, std::string> result = read_Sliced_data_Tellurium(memoryRepresentation);
+                        if(!result.has_value()){ return std::unexpected<std::string>(result.error()); }
+                        else{ return result.value(); }
+                    }
                 }
 
                 // now reads the data and put it into the temporary array
                 std::size_t find_result_index = allocationRecord_find_result->second;
-                std::vector<std::byte> temp_result_optimized;
                 std::size_t loop = 0;
                 for (;loop < memoryAddresses_Optimized[find_result_index]->size;loop++) {
                     if (memoryPool[memoryAddresses_Optimized[find_result_index]->block_number + loop] == nullptr) {
@@ -295,6 +303,16 @@ namespace Aegis_MemoryManager{
                 }
 
                 return temp_result_optimized;
+            }
+
+            std::expected<std::vector<std::byte>, std::string> read_Sliced_data_Tellurium(std::size_t& index){
+                // here should find all the matching record
+                std::map<std::size_t, std::weak_ptr<Memory_Slice>> memory_Slice_find_result;
+                std::for_each(memory_Fragmentation_table.begin(), memory_Fragmentation_table.end(), [&](
+                    const std::pair<std::size_t, std::weak_ptr<Memory_Slice>>& sliced_unit
+                ){
+                    // if the sliced unit is found, then push it into the result function
+                });
             }
 
         // this is the special memory optimization API
@@ -342,6 +360,7 @@ namespace Aegis_MemoryManager{
                     // push the slice index and the slice into the recorder
 
                     //this line is where the segmentation fault occurs
+                    // now the error is solved
                     temp_storage_memory_slice->slice_label = Memory_Slice_Allocation_index;
 
                     temp_storage_memory_slice->Memory_tobe_Sliced = memoryAddresses_Optimized.back();

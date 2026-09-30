@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <chrono>
 
+TEST(memory_manager_test, write_memory_test){}
 
 TEST(memory_manager_test, memory_Compression_test) {
     Aegis_MemoryManager::Aegis_allocator test_allocator;
