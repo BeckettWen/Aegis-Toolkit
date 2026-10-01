@@ -312,6 +312,27 @@ namespace Aegis_MemoryManager{
                     const std::pair<std::size_t, std::weak_ptr<Memory_Slice>>& sliced_unit
                 ){
                     // if the sliced unit is found, then push it into the result function
+                    if(sliced_unit.first == index){ 
+                        memory_Slice_find_result.insert(memory_Slice_find_result.end(), {index, sliced_unit.second});
+                    }
+                });
+
+                // now reads the actual data
+                std::vector<std::byte> temp_read_result;
+                std::for_each(memory_Slice_find_result.begin(), memory_Slice_find_result.end(), [&](
+                    const std::pair<std::size_t, std::weak_ptr<Memory_Slice>>& item_in_memorySlice
+                ){
+                    // iterate and read the result
+                    // well, not optimized, but please 'sit back and relax' :)
+                    std::shared_ptr<Memory_Slice> original_memory_slice = item_in_memorySlice.second.lock();
+                    std::shared_ptr<Memory_Representation_Unified> original_memory_slice_content = 
+                        (*original_memory_slice).Memory_tobe_Sliced.lock();
+
+                    // here use the three variables, one is the block number, second is the size
+                    // third is the current index
+                    std::size_t current_block_number = (*original_memory_slice_content).current_index[0];
+                    std::size_t current_withinblock_number = (*original_memory_slice_content).current_index[1];
+                    
                 });
             }
 
