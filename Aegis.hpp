@@ -71,7 +71,7 @@ namespace Aegis_MemoryManager{
         // this holds all of the unified memory address
         std::vector<std::shared_ptr<Memory_Representation_Unified>> memoryAddresses_Optimized;
         std::map<std::size_t, std::size_t> allocationRecorder_Optimized;
-        std::map<std::size_t, Memory_Slice> memory_Fragmentation_table;
+        std::map<std::size_t, std::weak_ptr<Memory_Slice>> memory_Fragmentation_table;
         std::size_t Memory_Slice_Allocation_index = 0;
 
         // here is the struct that needed in the optimize memory API
@@ -333,7 +333,15 @@ namespace Aegis_MemoryManager{
                     std::size_t current_block_number = (*original_memory_slice_content).current_index[0];
                     std::size_t current_withinblock_number = (*original_memory_slice_content).current_index[1];
                     
+                    while(current_block_number % Default_Memory_Size <= 1){
+                        // read the actual data into memory
+                        temp_read_result.emplace_back((*memoryPool[current_block_number])[current_withinblock_number]);
+                        current_block_number ++;
+                        if(current_block_number > Default_Memory_Size){ current_block_number = 0; current_block_number++;}
+                    }
                 });
+
+                return temp_read_result;
             }
 
         // this is the special memory optimization API
@@ -385,7 +393,7 @@ namespace Aegis_MemoryManager{
                     temp_storage_memory_slice->slice_label = Memory_Slice_Allocation_index;
 
                     temp_storage_memory_slice->Memory_tobe_Sliced = memoryAddresses_Optimized.back();
-                    memory_Fragmentation_table.insert({Memory_Slice_Allocation_index, (*temp_storage_memory_slice)});
+                    memory_Fragmentation_table.insert({Memory_Slice_Allocation_index, temp_storage_memory_slice});
                 }
 
                 // now release the original memory
