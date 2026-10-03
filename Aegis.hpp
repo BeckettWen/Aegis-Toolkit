@@ -93,6 +93,7 @@ namespace Aegis_MemoryManager{
         std::size_t allocateMemory_Optimized(std::size_t requestedSize_memory) {
             // the original process of the allocation to record the memory address and give a unique index
             std::size_t requestedBlockNumber = requestedSize_memory / (1024*1024);
+            if(requestedSize_memory % Default_Memory_Size != 0){ requestedBlockNumber += 1;}
             previousChunkNumber = currentAvailableChunkNumber;
             currentAvailableChunkNumber += requestedBlockNumber + 1;
 
