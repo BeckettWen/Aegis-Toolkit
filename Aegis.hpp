@@ -32,7 +32,7 @@ namespace Aegis_MemoryManager{
         public:
         // the successor to the version Tellurium is named "Krypton"
         std::string major_version = "Tellurium";
-        std::string minor_version = "10267";
+        std::string minor_version = "10268";
         std::string is_in_what_phase = "Beta";
 
         private:
@@ -94,8 +94,9 @@ namespace Aegis_MemoryManager{
             // the original process of the allocation to record the memory address and give a unique index
             std::size_t requestedBlockNumber = requestedSize_memory / (1024*1024);
             if(requestedSize_memory % Default_Memory_Size != 0){ requestedBlockNumber += 1;}
+
             previousChunkNumber = currentAvailableChunkNumber;
-            currentAvailableChunkNumber += requestedBlockNumber + 1;
+            currentAvailableChunkNumber += requestedBlockNumber;
 
             // now request the acquired memory blocks
             std::generate_n(std::back_inserter(memoryPool), requestedBlockNumber, []() {
@@ -103,13 +104,14 @@ namespace Aegis_MemoryManager{
             });
 
             // push the current position and index into the allocation recorder
-            memoryAddresses_Optimized.resize(memoryAddresses_Optimized.size() + 1);
-            memoryAddresses_Optimized.back() = std::make_unique<Memory_Representation_Unified>(Memory_Representation_Unified{
-                previousChunkNumber, 0, {0, 0}, AllocationIndex, requestedBlockNumber
-            });
+            memoryAddresses_Optimized.emplace_back(std::make_shared<Memory_Representation_Unified>(Memory_Representation_Unified{
+                previousChunkNumber, 0, {previousChunkNumber, 0}, AllocationIndex, requestedBlockNumber
+            }));
 
-            allocationRecorder_Optimized.insert(allocationRecorder_Optimized.end(), {AllocationIndex, memoryAddresses_Optimized.size() - 1});
-            return AllocationIndex;
+            
+            allocationRecorder_Optimized.insert({AllocationIndex, memoryAddresses_Optimized.size() - 1});
+            AllocationIndex += 1;
+            return AllocationIndex - 1;
         }
 
         std::expected<void, std::string> DeleteMemory(std::size_t requestedDeletion){
@@ -151,57 +153,6 @@ namespace Aegis_MemoryManager{
             // but still, if you use the general vector type would be much easier
             // and that is the official supported data type when writing examples and do some demonstrations
         public:
-            template<typename Datatype>
-            requires std::is_trivially_copyable_v<Datatype>
-            std::expected<void, std::string> wirteDataToMemory(std::size_t requestedMemory, const Datatype* data){
-                // first you need to get the actual address and the avaliable chunks
-                std::unordered_map<std::size_t, std::size_t>::iterator recordFindResult = allocationRecorder.find(requestedMemory);
-                if (recordFindResult == allocationRecorder.end()){ return std::unexpected<std::string>("Error: From Memory Record Finding"); }
-                else{
-
-                    std::unordered_map<std::size_t, std::size_t>::iterator sizeFindResult = allocatedChunkSize.find(requestedMemory);
-                    if(sizeFindResult == allocatedChunkSize.end()){ return std::unexpected<std::string>("Error: From Record Finding Process");}
-                    else{
-
-                        // here is the temporary variables that would be used to assist the processing of the 
-                        // memory address, so be calm when seeing these variables
-                        auto temporaryMemoryAddress = memoryAddresses[requestedMemory];
-                        std::size_t ChunkNumberIndicator = std::get<0>(std::get<0>(temporaryMemoryAddress));
-                        std::size_t indicatorInsidetheChunk = std::get<1>(std::get<0>(temporaryMemoryAddress));
-                        std::size_t avaliableChunks = (*sizeFindResult).second;
-
-                        const Datatype* dataStorage = static_cast<const Datatype*>(data);
-                        for(auto item: dataStorage){
-                            // here should have the basic process of handling the writting and checking the boundary
-                            idleMemorySize = sizeFindResult->second * 1024 * 1024;
-                            if(std::size(dataStorage) > idleMemorySize){ 
-                                return std::unexpected<std::string>("Error: low memory size");
-                                break;
-                            }
-                            
-                            //write the data as the raw bytes
-                            if(indicatorInsidetheChunk == 1024*1024 - 1){
-                                avaliableChunks -= 1;
-                                ChunkNumberIndicator += 1;
-                                indicatorInsidetheChunk = 0;
-                                (*memoryPool[ChunkNumberIndicator])[indicatorInsidetheChunk] = static_cast<std::byte>(item);
-                            }
-                            else{
-                                indicatorInsidetheChunk += 1;
-                                (*memoryPool[ChunkNumberIndicator])[indicatorInsidetheChunk] = static_cast<std::byte>(item);
-                            }
-                        }
-
-
-                        delete dataStorage;
-                        // this is the end of the writting process
-                        return {};
-                    // here is the end of the size find result
-                    }
-                // here is the end of the record find result
-                }
-            // here is the end of the whole writting function
-            }
 
         // here will set the optimized version of the write function
         template<typename Datatype>
@@ -214,14 +165,12 @@ namespace Aegis_MemoryManager{
                     return std::unexpected<std::string>("Requested Memory Not Found");
                 }
 
-                // const Datatype* data_converted = static_cast<const Datatype*>(data);
-
                 // first calculate the idle memory size
-                std::size_t idle_memory_size =
-                    memoryAddresses_Optimized[recordFindResult->second]->size -
-                        (memoryAddresses_Optimized[recordFindResult->second]->current_index[0]
-                - memoryAddresses_Optimized[recordFindResult->second]->block_number - 1) * Default_Memory_Size
-                - memoryAddresses_Optimized[recordFindResult->second]->current_index[1] - 1;
+                std::size_t idle_memory_size = (memoryAddresses_Optimized[recordFindResult->second]->size * (1024*1024)) - 
+                    ((memoryAddresses_Optimized[recordFindResult->second]->current_index[0] - 
+                        memoryAddresses_Optimized[recordFindResult->second]->block_number) * (1024*1024) + 
+                        memoryAddresses_Optimized[recordFindResult->second]->current_index[1]);
+                
 
                 if constexpr (std::is_same_v<Datatype, const char*>) {
                     if (idle_memory_size < std::strlen(data)) {
@@ -245,9 +194,16 @@ namespace Aegis_MemoryManager{
                     temporary_data = static_cast<std::byte>(item);
                     (*memoryPool[temp_block_indicator])[temp_withinblock_indicator] = temporary_data;
 
-                    if (temp_withinblock_indicator == 1024*1024){ temp_block_indicator ++; temp_withinblock_indicator = 0;}
-                    else{ temp_withinblock_indicator ++;}
+                    temp_withinblock_indicator ++;
+                    if (temp_withinblock_indicator == 1024*1024 ){                        
+                        temp_block_indicator ++; 
+                        temp_withinblock_indicator = 0;
+                    }
                 }
+
+                // push the indicator to the original indicator to avoid the compression API mis-compressed the data
+                memoryAddresses_Optimized[recordFindResult->second]->current_index[0] = temp_block_indicator;
+                memoryAddresses_Optimized[recordFindResult->second]->current_index[1] = temp_withinblock_indicator;
 
                 // delete data;
                 return {};
@@ -292,7 +248,8 @@ namespace Aegis_MemoryManager{
                 // now reads the data and put it into the temporary array
                 std::size_t find_result_index = allocationRecord_find_result->second;
                 std::size_t loop = 0;
-                for (;loop < memoryAddresses_Optimized[find_result_index]->size;loop++) {
+                // this line (253) throws the segmentation fault (4th Oct 2026)
+                for (loop = 0;loop < memoryAddresses_Optimized[find_result_index]->size;loop++) {
                     if (memoryPool[memoryAddresses_Optimized[find_result_index]->block_number + loop] == nullptr) {
                         continue;
                     }
