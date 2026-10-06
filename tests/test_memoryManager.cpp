@@ -32,7 +32,7 @@ TEST(memory_manager_test, memory_Compression_test) {
         std::cout<<"Normal test\n";
     }
 
-    auto result_sliced = test_allocator.readData_Optimized(index_to_be_fragmented);
+    auto result_sliced = test_allocator.read_Sliced_data_Tellurium(index_to_be_fragmented);
     if(result_sliced.has_value()){
         for(std::byte item: result_sliced.value()){
             std::cout<<std::to_integer<uint8_t>(item);

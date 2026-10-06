@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
-#define Default_Memory_Size 1024*1024
+#define Default_Memory_Size (1024*1024)
 
 using DefaultChunkOfMemory = std::array<std::byte, 1024*1024>;
 using MemoryAddress = std::tuple<std::size_t, std::size_t>;
@@ -32,8 +32,8 @@ namespace Aegis_MemoryManager{
         public:
         // the successor to the version Tellurium is named "Krypton"
         std::string major_version = "Tellurium";
-        std::string minor_version = "10268";
-        std::string is_in_what_phase = "Beta";
+        std::string minor_version = "10270";
+        std::string is_in_what_phase = "Public Release";
 
         private:
         // using the 1 megabytes memory as the allocator's step inside the header file
@@ -64,14 +64,18 @@ namespace Aegis_MemoryManager{
             std::size_t size;
         };
         struct Memory_Slice {
-            std::weak_ptr<Memory_Representation_Unified> Memory_tobe_Sliced;
+            std::shared_ptr<Memory_Representation_Unified> Memory_tobe_Sliced;
             std::size_t slice_label;
+
+            // this is the helper variable added to fix the problem of memory compression
+            std::array<std::size_t, 2> destination;
+            std::size_t byte_count = 0;
         };
 
         // this holds all of the unified memory address
         std::vector<std::shared_ptr<Memory_Representation_Unified>> memoryAddresses_Optimized;
         std::map<std::size_t, std::size_t> allocationRecorder_Optimized;
-        std::map<std::size_t, std::weak_ptr<Memory_Slice>> memory_Fragmentation_table;
+        std::map<std::size_t, std::shared_ptr<Memory_Slice>> memory_Fragmentation_table;
         std::size_t Memory_Slice_Allocation_index = 0;
 
         // here is the struct that needed in the optimize memory API
@@ -265,9 +269,9 @@ namespace Aegis_MemoryManager{
 
             std::expected<std::vector<std::byte>, std::string> read_Sliced_data_Tellurium(std::size_t& index){
                 // here should find all the matching record
-                std::map<std::size_t, std::weak_ptr<Memory_Slice>> memory_Slice_find_result;
+                std::map<std::size_t, std::shared_ptr<Memory_Slice>> memory_Slice_find_result;
                 std::for_each(memory_Fragmentation_table.begin(), memory_Fragmentation_table.end(), [&](
-                    const std::pair<std::size_t, std::weak_ptr<Memory_Slice>>& sliced_unit
+                    const std::pair<std::size_t, std::shared_ptr<Memory_Slice>>& sliced_unit
                 ){
                     // if the sliced unit is found, then push it into the result function
                     if(sliced_unit.first == index){ 
@@ -275,27 +279,29 @@ namespace Aegis_MemoryManager{
                     }
                 });
 
+                if(memory_Slice_find_result.empty()){ return std::unexpected<std::string>("No Matching Index Found\n");}
+
                 // now reads the actual data
                 std::vector<std::byte> temp_read_result;
                 std::for_each(memory_Slice_find_result.begin(), memory_Slice_find_result.end(), [&](
-                    const std::pair<std::size_t, std::weak_ptr<Memory_Slice>>& item_in_memorySlice
+                    const std::pair<std::size_t, std::shared_ptr<Memory_Slice>>& item_in_memorySlice
                 ){
                     // iterate and read the result
                     // well, not optimized, but please 'sit back and relax' :)
-                    std::shared_ptr<Memory_Slice> original_memory_slice = item_in_memorySlice.second.lock();
+                    std::shared_ptr<Memory_Slice> original_memory_slice = item_in_memorySlice.second;
                     std::shared_ptr<Memory_Representation_Unified> original_memory_slice_content = 
-                        (*original_memory_slice).Memory_tobe_Sliced.lock();
+                        (*original_memory_slice).Memory_tobe_Sliced;
 
                     // here use the three variables, one is the block number, second is the size
                     // third is the current index
-                    std::size_t current_block_number = (*original_memory_slice_content).current_index[0];
-                    std::size_t current_withinblock_number = (*original_memory_slice_content).current_index[1];
+                    std::size_t current_block_number = (*original_memory_slice).destination[0];
+                    std::size_t current_withinblock_number = (*original_memory_slice).destination[1];
                     
-                    while(current_block_number % Default_Memory_Size <= 1){
+                    while (temp_read_result.size() < original_memory_slice->byte_count){
                         // read the actual data into memory
                         temp_read_result.emplace_back((*memoryPool[current_block_number])[current_withinblock_number]);
-                        current_block_number ++;
-                        if(current_block_number > Default_Memory_Size){ current_block_number = 0; current_block_number++;}
+                        // current_block_number ++;
+                        if (++current_withinblock_number == Default_Memory_Size) { current_withinblock_number = 0; ++current_block_number; }
                     }
                 });
 
@@ -319,14 +325,21 @@ namespace Aegis_MemoryManager{
                 // this slices the optimized memory and record that fragmentation
                 for (const std::shared_ptr<Memory_Representation_Unified>& item : memoryAddresses_Optimized) {
                     if (item->withinBlock_number == Default_Memory_Size - 1){ continue;}
+                    if (item == Optimization_Object || memory_read_index == Optimization_Object->current_index) break;
 
                     //assign the temporary recorder the recorder of the memory that provides the space
                     memory_provide_space = item->current_index;
 
+                    // add the memory provide space to the destination as the record
+                    temp_storage_memory_slice->destination = memory_provide_space;
+                    temp_storage_memory_slice->byte_count = 0;
+
                     // this makes sure the memory is fully used, by looping until the write finished or no memory available
-                    while (item->withinBlock_number != Default_Memory_Size - 1 &&
-                        memory_read_index[1] != memoryAddresses_Optimized.back()->current_index[1]) {
+                    while (memory_provide_space[0] < item->block_number + item->size 
+                        && memory_read_index != Optimization_Object->current_index) {
                         // read the data out of the memory and write the data back to the idle space
+                        ++temp_storage_memory_slice->byte_count;
+
                         (*memoryPool[memory_provide_space[0]])[memory_provide_space[1]] =
                             (*memoryPool[memory_read_index[0]])[memory_read_index[1]];
 
@@ -344,19 +357,21 @@ namespace Aegis_MemoryManager{
                         else{memory_provide_space[1] ++;}
                     }
 
-                    // push the slice index and the slice into the recorder
+                    item->current_index = memory_provide_space;
 
-                    //this line is where the segmentation fault occurs
-                    // now the error is solved
                     temp_storage_memory_slice->slice_label = Memory_Slice_Allocation_index;
 
                     temp_storage_memory_slice->Memory_tobe_Sliced = memoryAddresses_Optimized.back();
-                    memory_Fragmentation_table.insert({Memory_Slice_Allocation_index, temp_storage_memory_slice});
+                    memory_Fragmentation_table.insert({Optimization_Object->allocation_index, temp_storage_memory_slice});
+                }
+
+                if (memory_read_index != Optimization_Object->current_index) {
+                    return std::unexpected<std::string>("Not enough destination space");
                 }
 
                 // now release the original memory
                 for (int range = 0; range<memoryAddresses_Optimized.back()->size; range++) {
-                    memoryPool[memoryAddresses_Optimized.back()->block_number].reset();
+                    memoryPool[memoryAddresses_Optimized.back()->block_number + range].reset();
                 }
 
                 return {};
