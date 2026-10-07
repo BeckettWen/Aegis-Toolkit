@@ -1,4 +1,6 @@
 // this is the state machine tool
+// Notice that although these tools are separated in different files
+// the version is all the same
 
 #pragma once
 
@@ -8,17 +10,19 @@
 #include <any>
 #include <string>
 
+#include "VersionInfo.h"
+
 using event_type_General = std::function<void()>;
 
 namespace Aegis_stateMachine{
 
     // here is the error code that help define the error
-    enum Error_Code: uint{
+    enum Error_Code: int{
         Requested_State_Event_Not_Found = 0,
         Boundary = 1024
     };
 
-    enum Switching_Status: uint{
+    enum Switching_Status: int{
         Success = 0,
         Against_Boundary = 1
     };

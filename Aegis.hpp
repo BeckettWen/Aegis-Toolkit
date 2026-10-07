@@ -19,6 +19,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "VersionInfo.h"
+
 #define Default_Memory_Size (1024*1024)
 
 using DefaultChunkOfMemory = std::array<std::byte, 1024*1024>;
@@ -30,10 +32,6 @@ namespace Aegis_MemoryManager{
         //use the arena structure first, may switch to a new high efficiency structure later
         friend class lunarfilament;
         public:
-        // the successor to the version Tellurium is named "Krypton"
-        std::string major_version = "Tellurium";
-        std::string minor_version = "10270";
-        std::string is_in_what_phase = "Public Release";
 
         private:
         // using the 1 megabytes memory as the allocator's step inside the header file
