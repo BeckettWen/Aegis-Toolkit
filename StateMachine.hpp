@@ -34,8 +34,12 @@ namespace Aegis_stateMachine{
 
         std::expected<void, std::string> Store_State(State& current_state_input){}
 
-        void Register_Event(State& state, event_type_General event) {
-            // register the specific event to the state
+        void Register_Rules_With_Events(State& state, event_type_General action, Events event) {
+            // register the event, combined from the original design
+
+            // register the rules, which is still the prototype design
+            std::shared_ptr<transition_rule> rule = std::make_shared<transition_rule>(action, current_state, event);
+            registry.insert(state, (*rule));
         }
 
         std::expected<void, std::string> Transition(State& state) {

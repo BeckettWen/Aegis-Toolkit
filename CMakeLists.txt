@@ -23,11 +23,13 @@ add_executable(tests
     tests/test_memoryManager.cpp
         StateMachine.hpp
         tests/test_statemachine.cpp
+        ThreadPool.hpp
         # Add other test source files here
 )
 
 add_executable(benchmark
     tests/benchmark_memoryManager.cpp
+        ThreadPool.hpp
 )
 
 # Link GTest to your executable
