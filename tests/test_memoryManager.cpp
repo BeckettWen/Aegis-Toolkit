@@ -41,9 +41,3 @@ TEST(memory_manager_test, memory_Compression_test) {
     }
     else{ std::cout<<result_sliced.error();}
 }
-
-
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

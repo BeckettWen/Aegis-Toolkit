@@ -24,6 +24,7 @@ add_executable(tests
         StateMachine.hpp
         tests/test_statemachine.cpp
         ThreadPool.hpp
+        tests/test_main.cpp
         # Add other test source files here
 )
 
