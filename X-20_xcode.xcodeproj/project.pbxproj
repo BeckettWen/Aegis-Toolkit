@@ -35,20 +35,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		2EC945C0307C827C00C0D7A3 /* Exceptions for "benchmark" folder in "benchmark" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				main.cpp,
-			);
-			target = 2EC945B8307C821900C0D7A3 /* benchmark */;
-		};
-		2EC945C4307C828B00C0D7A3 /* Exceptions for "test" folder in "test" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				main.cpp,
-			);
-			target = 2EC945AD307C820A00C0D7A3 /* test */;
-		};
 		2EC945D2307C85C900C0D7A3 /* Exceptions for "tests" folder in "test" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -68,22 +54,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		2EC945AF307C820A00C0D7A3 /* test */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				2EC945C4307C828B00C0D7A3 /* Exceptions for "test" folder in "test" target */,
-			);
-			path = test;
-			sourceTree = "<group>";
-		};
-		2EC945BA307C821900C0D7A3 /* benchmark */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				2EC945C0307C827C00C0D7A3 /* Exceptions for "benchmark" folder in "benchmark" target */,
-			);
-			path = benchmark;
-			sourceTree = "<group>";
-		};
 		2EC945CD307C85C800C0D7A3 /* tests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -117,8 +87,6 @@
 				2EC945A3307C811900C0D7A3 /* StateMachine.hpp */,
 				2EC945A4307C811900C0D7A3 /* ThreadPool.hpp */,
 				2EC945A5307C811900C0D7A3 /* VersionInfo.h */,
-				2EC945AF307C820A00C0D7A3 /* test */,
-				2EC945BA307C821900C0D7A3 /* benchmark */,
 				2EC94594307C7E8F00C0D7A3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -145,9 +113,6 @@
 			);
 			buildRules = (
 			);
-			fileSystemSynchronizedGroups = (
-				2EC945AF307C820A00C0D7A3 /* test */,
-			);
 			name = test;
 			productName = test;
 			productReference = 2EC945AE307C820A00C0D7A3 /* test */;
@@ -162,9 +127,6 @@
 				2EC945B7307C821900C0D7A3 /* CopyFiles */,
 			);
 			buildRules = (
-			);
-			fileSystemSynchronizedGroups = (
-				2EC945BA307C821900C0D7A3 /* benchmark */,
 			);
 			name = benchmark;
 			productName = benchmark;

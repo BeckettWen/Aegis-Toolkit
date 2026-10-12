@@ -54,6 +54,11 @@ namespace Aegis_stateMachine{
         }
 
         std::expected<void, std::string> Transition(State& state) {
+            // add the check to ensure the safety
+            if(state != current_state){
+                return std::unexpected<std::string>("State Rule Not Found");
+            }
+            
             // here first find the tuple that stores the transition rule
             typename std::unordered_map<State, transition_rule>::iterator find_result = registry.find(state);
             if (find_result == registry.end()) {
