@@ -378,5 +378,13 @@ namespace Aegis_MemoryManager{
 
     //the end bracket of the class Aegis_allocator
     };
+
+// here will create a class called Aegis_defender, to add security measures to the Aegis_allocator
+class Aegis_denfender{
+private:
+    // this is a map that measures which the user can access
+    // is currently in the design phase
+};
+
 //the end bracket of the namespace
 }
