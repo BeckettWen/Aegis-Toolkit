@@ -384,6 +384,22 @@ class Aegis_denfender{
 private:
     // this is a map that measures which the user can access
     // is currently in the design phase
+    
+    long long security_token;
+    std::unordered_map<std::size_t, long long>(token_allocation_map);
+    
+protected:
+    Aegis_denfender(){}
+    ~Aegis_denfender(){}
+    
+    std::expected<void, std::string> Generate_Token(){
+        return {};
+    }
+    
+public:
+    std::expected<void, std::string> Initialize(){
+        return {};
+    }
 };
 
 //the end bracket of the namespace

@@ -6,6 +6,6 @@
 
 struct UniversalVersionInfo{
     std::string major_version = "Selenium";
-    std::string minor_version = "10278";
+    std::string minor_version = "10281";
     std::string is_in_what_phase = "Beta";
 };
