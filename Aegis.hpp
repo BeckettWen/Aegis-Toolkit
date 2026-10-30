@@ -18,6 +18,8 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
+#include <cstdlib>
 
 #include "VersionInfo.h"
 
@@ -385,7 +387,7 @@ private:
     // this is a map that measures which the user can access
     // is currently in the design phase
     
-    long long security_token;
+    long long temporary_security_token;
     std::unordered_map<std::size_t, long long>(token_allocation_map);
     
 protected:
@@ -393,11 +395,15 @@ protected:
     ~Aegis_denfender(){}
     
     std::expected<void, std::string> Generate_Token(){
+        // here finishes the token generation process
+        arc4random_buf(&temporary_security_token, sizeof(temporary_security_token));
         return {};
     }
     
 public:
     std::expected<void, std::string> Initialize(){
+        // this is the first token generation of the whole process
+        arc4random_buf(&temporary_security_token, sizeof(temporary_security_token));
         return {};
     }
 };
