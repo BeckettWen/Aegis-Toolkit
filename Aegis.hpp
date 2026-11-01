@@ -389,18 +389,22 @@ private:
     
     long long temporary_security_token;
     std::unordered_map<std::size_t, long long>(token_allocation_map);
+    Aegis_MemoryManager::Aegis_allocator& referenced_main_allocator;
     
 protected:
-    Aegis_denfender(){}
+    Aegis_denfender(Aegis_MemoryManager::Aegis_allocator& reference_input): referenced_main_allocator(reference_input){}
     ~Aegis_denfender(){}
     
-    std::expected<void, std::string> Generate_Token(){
+public:
+    std::expected<void, std::string> Generate_Token(std::size_t& record_to_be_protected){
         // here finishes the token generation process
         arc4random_buf(&temporary_security_token, sizeof(temporary_security_token));
+        
+        // then push it into the record to make sure its protected
         return {};
     }
     
-public:
+
     std::expected<void, std::string> Initialize(){
         // this is the first token generation of the whole process
         arc4random_buf(&temporary_security_token, sizeof(temporary_security_token));
