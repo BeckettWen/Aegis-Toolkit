@@ -229,7 +229,7 @@ namespace Aegis_MemoryManager{
 
         // this is the optimized read Data api
         // still in the Design phase, will publish it in the next version
-        // the next version is named "Tellurium"
+        // the next version is named "Selenium"
             std::expected<std::vector<std::byte>, std::string> readData_Optimized(std::size_t& memoryRepresentation) {
                 
                 std::vector<std::byte> temp_result_optimized;
@@ -391,6 +391,10 @@ private:
     std::unordered_map<std::size_t, long long>(token_allocation_map);
     Aegis_MemoryManager::Aegis_allocator& referenced_main_allocator;
     
+    enum access_state: int{
+        Granted = 0, Denied = 1
+    };
+    
 protected:
     Aegis_denfender(Aegis_MemoryManager::Aegis_allocator& reference_input): referenced_main_allocator(reference_input){}
     ~Aegis_denfender(){}
@@ -401,9 +405,19 @@ public:
         arc4random_buf(&temporary_security_token, sizeof(temporary_security_token));
         
         // then push it into the record to make sure its protected
+        token_allocation_map.insert({record_to_be_protected, temporary_security_token});
         return {};
     }
     
+    std::expected<access_state, std::string> challenge(long long& security_token, int& challenge_record){
+        // this checks if the user has the proviledge to access the memory
+        std::unordered_map<std::size_t, long long>::iterator temporary_token = token_allocation_map.find(challenge_record);
+        if(temporary_token == token_allocation_map.end()){ return access_state::Denied; }
+        else{
+            if((*temporary_token).second == security_token){ return access_state::Granted; }
+            else{ return access_state::Denied; }
+        }
+    }
 
     std::expected<void, std::string> Initialize(){
         // this is the first token generation of the whole process
