@@ -79,6 +79,8 @@ namespace Aegis_MemoryManager{
         std::size_t Memory_Slice_Allocation_index = 0;
 
         // here is the struct that needed in the optimize memory API
+        
+        // this section contains the variables that is critical for the security measures
 
 
         public:
@@ -382,22 +384,22 @@ namespace Aegis_MemoryManager{
     };
 
 // here will create a class called Aegis_defender, to add security measures to the Aegis_allocator
-class Aegis_denfender{
+class Aegis_Allocator_withdefender{
 private:
     // this is a map that measures which the user can access
     // is currently in the design phase
     
     long long temporary_security_token;
     std::unordered_map<std::size_t, long long>(token_allocation_map);
-    Aegis_MemoryManager::Aegis_allocator& referenced_main_allocator;
+    Aegis_MemoryManager::Aegis_allocator main_allocator;
     
     enum access_state: int{
         Granted = 0, Denied = 1
     };
     
 protected:
-    Aegis_denfender(Aegis_MemoryManager::Aegis_allocator& reference_input): referenced_main_allocator(reference_input){}
-    ~Aegis_denfender(){}
+    Aegis_Allocator_withdefender(){}
+    ~Aegis_Allocator_withdefender(){}
     
 public:
     std::expected<void, std::string> Generate_Token(std::size_t& record_to_be_protected){
@@ -409,7 +411,7 @@ public:
         return {};
     }
     
-    std::expected<access_state, std::string> challenge(long long& security_token, int& challenge_record){
+    std::expected<access_state, std::string> challenge(long long& security_token, std::size_t& challenge_record){
         // this checks if the user has the proviledge to access the memory
         std::unordered_map<std::size_t, long long>::iterator temporary_token = token_allocation_map.find(challenge_record);
         if(temporary_token == token_allocation_map.end()){ return access_state::Denied; }
@@ -423,6 +425,21 @@ public:
         // this is the first token generation of the whole process
         arc4random_buf(&temporary_security_token, sizeof(temporary_security_token));
         return {};
+    }
+    
+    std::expected<std::vector<std::byte>, std::string> read_protected_data(std::size_t& index, long long& security_token){
+        // first check if the user has the priviledge to read the data
+        std::expected<access_state, std::string> result = challenge(security_token, index);
+        if(result.has_value()){
+            if(result.value() == access_state::Denied){ return std::unexpected<std::string>("Access Denied"); }
+        }
+        else{ return std::unexpected<std::string>("Challenge Failed"); }
+        
+        // now read the data
+        std::expected<std::vector<std::byte>, std::string>(read_result)(main_allocator.readData_Optimized(index));
+        if(!read_result.has_value()){ return std::unexpected<std::string>(read_result.error()); }
+        
+        return read_result.value();
     }
 };
 

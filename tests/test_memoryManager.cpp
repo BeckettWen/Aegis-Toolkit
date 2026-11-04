@@ -3,6 +3,10 @@
 #include <gtest/gtest.h>
 #include <chrono>
 
+#include <cstring>
+#include <limits>
+#include <type_traits>
+
 TEST(memory_manager_test, write_memory_test){
     Aegis_MemoryManager::Aegis_allocator write_allocator;
     std::size_t index = write_allocator.allocateMemory_Optimized(Default_Memory_Size - 1);
@@ -40,4 +44,76 @@ TEST(memory_manager_test, memory_Compression_test) {
         std::cout<<"Sliced test\n";
     }
     else{ std::cout<<result_sliced.error();}
+}
+
+TEST(memory_manager_test, defender_test){
+    class TestableAegisDefender: public Aegis_MemoryManager::Aegis_Allocator_withdefender {
+        public:
+            TestableAegisDefender() = default;
+            ~TestableAegisDefender() = default;
+        };
+
+        TestableAegisDefender defender;
+        ASSERT_TRUE(defender.Initialize().has_value());
+
+        std::size_t record = 42;
+        long long token = 0;
+
+        auto missingRecordResult = defender.read_protected_data(record, token);
+        ASSERT_FALSE(missingRecordResult.has_value());
+        EXPECT_EQ(missingRecordResult.error(), "Access Denied");
+
+        ASSERT_TRUE(defender.Generate_Token(record).has_value());
+
+        auto challenge = defender.challenge(token, record);
+        ASSERT_TRUE(challenge.has_value());
+        EXPECT_EQ(static_cast<int>(challenge.value()), 1);  // Denied
+
+        auto protectedReadResult = defender.read_protected_data(record, token);
+        ASSERT_FALSE(protectedReadResult.has_value());
+        EXPECT_EQ(protectedReadResult.error(), "Access Denied");
+}
+
+TEST(memory_manager_test, security_test){
+    class TestableAegisDefender
+            : public Aegis_MemoryManager::Aegis_Allocator_withdefender {
+        public:
+            TestableAegisDefender() = default;
+            ~TestableAegisDefender() = default;
+        };
+
+        TestableAegisDefender defender;
+        ASSERT_TRUE(defender.Initialize().has_value());
+
+        long long invalidToken = std::numeric_limits<long long>::min();
+
+        std::size_t unknownRecord = 101;
+        auto unknownRead =
+            defender.read_protected_data(unknownRecord, invalidToken);
+        ASSERT_FALSE(unknownRead.has_value());
+        EXPECT_EQ(unknownRead.error(), "Access Denied");
+
+        std::size_t protectedRecord = 202;
+        ASSERT_TRUE(defender.Generate_Token(protectedRecord).has_value());
+
+        auto challenge = defender.challenge(invalidToken, protectedRecord);
+        ASSERT_TRUE(challenge.has_value());
+        EXPECT_EQ(static_cast<int>(challenge.value()), 1);  // Denied
+
+        auto protectedRead =
+            defender.read_protected_data(protectedRecord, invalidToken);
+        ASSERT_FALSE(protectedRead.has_value());
+        EXPECT_EQ(protectedRead.error(), "Access Denied");
+
+        std::size_t differentRecord = 303;
+        auto differentRecordRead =
+            defender.read_protected_data(differentRecord, invalidToken);
+        ASSERT_FALSE(differentRecordRead.has_value());
+        EXPECT_EQ(differentRecordRead.error(), "Access Denied");
+
+        ASSERT_TRUE(defender.Generate_Token(protectedRecord).has_value());
+        auto repeatedGenerationChallenge =
+            defender.challenge(invalidToken, protectedRecord);
+        ASSERT_TRUE(repeatedGenerationChallenge.has_value());
+        EXPECT_EQ(static_cast<int>(repeatedGenerationChallenge.value()), 1);
 }

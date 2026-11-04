@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
     ::testing::GTEST_FLAG(filter) =
-        "StateMachineTest.*";
+        "memory_manager_test.security_test";
 
     return RUN_ALL_TESTS();
 }
